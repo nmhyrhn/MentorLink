@@ -1,0 +1,63 @@
+@import "tailwindcss";
+
+@theme {
+  /* 배경 전체 하얗게 */
+  --color-background: #ffffff;
+  --color-foreground: #1a1a2e;
+  --color-muted: #fafafa;
+  --color-muted-foreground: #64748b;
+  --color-border: #e5e7eb;
+  --color-primary: #facc15;
+  --color-primary-foreground: #1f2933;
+  --color-accent: #fefce8;
+  --color-accent-foreground: #854d0e;
+  
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #1a1a2e;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #111827;
+    --foreground: #f9fafb;
+  }
+  @theme {
+    /* 다크 모드: 노란 포인트 유지하면서 어두운 배경 */
+    --color-background: #111827;
+    --color-foreground: #f9fafb;
+    --color-muted: #1f2937;
+    --color-muted-foreground: #e5e7eb;
+    --color-border: #374151;
+    --color-primary: #facc15;
+    --color-primary-foreground: #111827;
+    --color-accent: #78350f;
+    --color-accent-foreground: #fef3c7;
+  }
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Linear/Notion style specifics */
+::selection {
+  background-color: rgba(0, 0, 0, 0.1);
+  color: inherit;
+}
+
+@media (prefers-color-scheme: dark) {
+  ::selection {
+    background-color: rgba(255, 255, 255, 0.2);
+  }
+}

@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Next.js (frontend)
+frontend/.next/
+frontend/out/
+frontend/build/
+
+# Env
+.env
+.env*.local
+
+# Logs & misc
+*.log
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Vercel
+.vercel
