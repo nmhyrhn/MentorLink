@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/mentorlink?serverTimezone=Asia/Seoul&characterEncoding=UTF-8
+    username: mentorlink
+    password: mentorlink
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    open-in-view: false
+  jackson:
+    time-zone: Asia/Seoul
+
+jwt:
+  secret: mentorlink-mentorlink-mentorlink-mentorlink-secret-key-2026
+  expiration-ms: 86400000
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui/index.html
+
+server:
+  port: 8080
