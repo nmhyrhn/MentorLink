@@ -1,0 +1,7 @@
+package com.example.mentorlink.domain;
+
+public enum SessionStatus {
+    SCHEDULED,
+    FINISHED,
+    CANCELLED
+}

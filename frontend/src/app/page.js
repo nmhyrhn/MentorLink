@@ -58,8 +58,12 @@ export default function Home() {
             }
           ].map((feature, i) => {
             const Icon = feature.icon;
+            const cardBgClass = 'bg-white';
             return (
-              <div key={i} className="flex flex-col items-center text-center p-6 rounded-2xl border border-[var(--color-border)] bg-white shadow-sm hover:shadow-md hover:border-[var(--color-primary)]/20 transition-all">
+              <div
+                key={i}
+                className={`flex flex-col items-center text-center p-6 rounded-2xl border border-[var(--color-border)] ${cardBgClass} shadow-sm hover:shadow-md hover:border-[var(--color-primary)]/20 transition-all`}
+              >
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-accent)] mb-4 text-[var(--color-primary)]">
                   <Icon className="h-6 w-6" />
                 </div>

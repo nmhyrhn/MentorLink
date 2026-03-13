@@ -1,0 +1,6 @@
+package com.example.mentorlink.domain;
+
+public enum Role {
+    MENTOR,
+    MENTEE
+}

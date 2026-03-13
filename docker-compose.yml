@@ -1,17 +1,54 @@
+# MentorLink - Docker Compose
+# 사용: docker compose up -d
+# 프론트: http://localhost:3000  |  MySQL: localhost:3306
+
 version: '3.8'
+
 services:
   mysql:
-    image: mysql:latest
-    restart: always
+    image: mysql:8.0
+    restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: mydatabase
-      MYSQL_USER: user
-      MYSQL_PASSWORD: userpassword
+      # application.properties 설정과 동일하게 root / yourpassword 사용
+      MYSQL_ROOT_PASSWORD: yourpassword
+      MYSQL_DATABASE: mentorlink
+      # 필요 시 별도 애플리케이션용 계정 추가 가능
     ports:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # 로컬에서 백엔드(Spring Boot) 실행 시: host.docker.internal 사용
+      NEXT_PUBLIC_API_URL: http://host.docker.internal:8080/api
+    # Windows/Mac에서 호스트 머신의 8080 포트 접근
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # 백엔드(Spring Boot)는 추후 추가 예정
+  # backend:
+  #   build: ./backend
+  #   ports:
+  #     - "8080:8080"
+  #   environment:
+  #     SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/mentorlink
+  #     SPRING_DATASOURCE_USERNAME: mentorlink
+  #     SPRING_DATASOURCE_PASSWORD: mentorlink_secret
+  #   depends_on:
+  #     mysql:
+  #       condition: service_healthy
 
 volumes:
   mysql_data:

@@ -1,0 +1,8 @@
+package com.example.mentorlink.domain;
+
+public enum ApplicationStatus {
+    PENDING,
+    APPROVED,
+    REJECTED,
+    COMPLETED
+}
