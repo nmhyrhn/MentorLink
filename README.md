@@ -146,7 +146,3 @@ MySQL 데이터베이스 이름은 `mentorlink`입니다.
 - `http://localhost` 응답 확인
 - `http://localhost/api/mentors` 응답 확인
 - `http://localhost/api/swagger-ui.html` 응답 확인
-
-## 포트폴리오 문서
-
-기획서는 [portfolio-plan.md](D:\1. 남혜린\2. 공부\코딩\MentorLink\docs\portfolio-plan.md)에 정리되어 있습니다.
