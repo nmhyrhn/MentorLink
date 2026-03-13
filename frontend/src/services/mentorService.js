@@ -1,6 +1,7 @@
 import api from './api';
 
 // --- MOCK DATA (한국어) ---
+// pricePerHour: 시간당 멘토링 비용 (원)
 const MOCK_MENTORS = [
   {
     id: 1,
@@ -10,6 +11,7 @@ const MOCK_MENTORS = [
     experience: '8년',
     company: '테크플로우',
     avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Alice',
+    pricePerHour: 28000,
   },
   {
     id: 2,
@@ -19,6 +21,7 @@ const MOCK_MENTORS = [
     experience: '10년',
     company: '클라우드시스템즈',
     avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Michael',
+    pricePerHour: 25000,
   },
   {
     id: 3,
@@ -28,6 +31,7 @@ const MOCK_MENTORS = [
     experience: '5년',
     company: '디자인마인즈',
     avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Sarah',
+    pricePerHour: 30000,
   },
   {
     id: 4,
@@ -37,6 +41,7 @@ const MOCK_MENTORS = [
     experience: '7년',
     company: '인프라스케일',
     avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=David',
+    pricePerHour: 32000,
   },
 ];
 

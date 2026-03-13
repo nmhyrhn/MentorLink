@@ -5,18 +5,18 @@ export default function Home() {
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
-      <section className="w-full flex-1 flex flex-col items-center justify-center px-4 py-24 md:py-32 lg:py-40 text-center bg-gradient-to-b from-[var(--color-accent)] via-[var(--color-background)] to-transparent">
-        <div className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-[var(--color-background)] px-3 py-1 text-sm font-medium mb-8 shadow-sm">
+      <section className="w-full flex-1 flex flex-col items-center justify-center px-4 py-24 md:py-32 lg:py-40 text-center bg-[linear-gradient(to_bottom,#fefce8_0%,#fef9c3_30%,#ffffff_100%)]">
+        <div className="inline-flex items-center rounded-full border border-[var(--color-border)] bg-white px-3 py-1 text-sm font-medium mb-8 shadow-sm text-black">
           <span className="flex h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
           신규 멘토 신청을 받고 있어요
         </div>
         
-        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-[var(--color-foreground)] max-w-4xl mb-6">
+        <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold tracking-tight text-black max-w-4xl mb-6">
           나에게 딱 맞는 멘토와 함께
-          <span className="text-transparent bg-clip-text bg-gradient-to-r from-[var(--color-primary)] to-orange-400"> 커리어를 성장시키세요</span>
+          <span className="text-blue-600"> 커리어를 성장시키세요</span>
         </h1>
         
-        <p className="text-lg md:text-xl text-[var(--color-muted-foreground)] max-w-2xl mb-10">
+        <p className="text-lg md:text-xl text-black max-w-2xl mb-10">
           실제 현업에서 일하고 있는 전문가 멘토와 연결되어 1:1 코칭, 이력서 첨삭, 면접 대비 등 맞춤형 멘토링을 받아보세요.
         </p>
         
@@ -30,7 +30,7 @@ export default function Home() {
           </Link>
           <Link 
             href="/dashboard" 
-            className="inline-flex h-12 items-center justify-center rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] px-8 text-sm font-medium text-[var(--color-foreground)] transition-colors hover:bg-[var(--color-accent)] hover:border-[var(--color-primary)]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20"
+            className="inline-flex h-12 items-center justify-center rounded-xl border border-[var(--color-border)] bg-white px-8 text-sm font-medium text-black transition-colors hover:bg-[var(--color-accent)] hover:border-[var(--color-primary)]/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20"
           >
             나는 멘토예요
           </Link>
@@ -59,12 +59,12 @@ export default function Home() {
           ].map((feature, i) => {
             const Icon = feature.icon;
             return (
-              <div key={i} className="flex flex-col items-center text-center p-6 rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] shadow-sm hover:shadow-md hover:border-[var(--color-primary)]/20 transition-all">
+              <div key={i} className="flex flex-col items-center text-center p-6 rounded-2xl border border-[var(--color-border)] bg-white shadow-sm hover:shadow-md hover:border-[var(--color-primary)]/20 transition-all">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-accent)] mb-4 text-[var(--color-primary)]">
                   <Icon className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold mb-2">{feature.title}</h3>
-                <p className="text-[var(--color-muted-foreground)] leading-relaxed">{feature.description}</p>
+                <h3 className="text-lg font-semibold mb-2 text-black">{feature.title}</h3>
+                <p className="text-black leading-relaxed">{feature.description}</p>
               </div>
             );
           })}

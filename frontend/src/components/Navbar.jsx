@@ -17,7 +17,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-[var(--color-border)] bg-[var(--color-background)]/80 backdrop-blur-md">
+    <nav className="sticky top-0 z-50 w-full border-b border-[var(--color-border)] bg-white">
       <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 justify-between items-center">
           {/* Logo */}
@@ -26,7 +26,7 @@ export default function Navbar() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[var(--color-primary)] text-[var(--color-primary-foreground)]">
                 <Users className="h-5 w-5" />
               </div>
-              <span className="text-xl font-bold tracking-tight text-[var(--color-foreground)]">
+              <span className="text-xl font-bold tracking-tight text-black">
                 MentorLink
               </span>
             </Link>
@@ -42,8 +42,8 @@ export default function Navbar() {
                   key={link.name}
                   href={link.href}
                   className={cn(
-                    'flex items-center text-sm font-medium transition-colors hover:text-[var(--color-foreground)]',
-                    isActive ? 'text-[var(--color-foreground)]' : 'text-[var(--color-muted-foreground)]'
+                    'flex items-center text-sm font-medium transition-colors hover:text-black',
+                    isActive ? 'text-black' : 'text-gray-700'
                   )}
                 >
                   <Icon className="mr-2 h-4 w-4" />
@@ -53,7 +53,7 @@ export default function Navbar() {
             })}
             <Link
               href="/login"
-              className="text-sm font-medium text-[var(--color-muted-foreground)] hover:text-[var(--color-foreground)] transition-colors"
+              className="text-sm font-medium text-gray-700 hover:text-black transition-colors"
             >
               로그인
             </Link>
@@ -69,7 +69,7 @@ export default function Navbar() {
           <div className="flex items-center md:hidden">
             <button
               type="button"
-              className="inline-flex items-center justify-center rounded-md p-2 text-[var(--color-muted-foreground)] hover:bg-[var(--color-accent)] hover:text-[var(--color-foreground)] focus:outline-none"
+              className="inline-flex items-center justify-center rounded-md p-2 text-gray-700 hover:bg-[var(--color-accent)] hover:text-black focus:outline-none"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
             >
               <span className="sr-only">메인 메뉴 열기</span>
@@ -85,7 +85,7 @@ export default function Navbar() {
 
       {/* Mobile Nav */}
       {isMobileMenuOpen && (
-        <div className="md:hidden border-t border-[var(--color-border)] bg-[var(--color-background)]">
+        <div className="md:hidden border-t border-[var(--color-border)] bg-white">
           <div className="space-y-1 pb-3 pt-2">
             {navLinks.map((link) => {
               const isActive = pathname.startsWith(link.href);
@@ -97,8 +97,8 @@ export default function Navbar() {
                   className={cn(
                     'flex items-center px-4 py-3 text-base font-medium transition-colors',
                     isActive
-                      ? 'bg-[var(--color-accent)] text-[var(--color-foreground)] border-l-4 border-[var(--color-primary)]'
-                      : 'text-[var(--color-muted-foreground)] hover:bg-[var(--color-accent)]/50 hover:text-[var(--color-foreground)] border-l-4 border-transparent'
+                      ? 'bg-[var(--color-accent)] text-black border-l-4 border-[var(--color-primary)]'
+                      : 'text-gray-700 hover:bg-[var(--color-accent)]/50 hover:text-black border-l-4 border-transparent'
                   )}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
@@ -110,7 +110,7 @@ export default function Navbar() {
             <div className="mt-2 flex gap-2 px-4">
               <Link
                 href="/login"
-                className="flex-1 rounded-md border border-[var(--color-border)] py-2.5 text-center text-sm font-medium text-[var(--color-foreground)]"
+                className="flex-1 rounded-md border border-[var(--color-border)] py-2.5 text-center text-sm font-medium text-black"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
                 로그인

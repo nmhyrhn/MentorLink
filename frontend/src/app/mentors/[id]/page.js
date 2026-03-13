@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getMentorById } from '@/services/mentorService';
-import { ArrowLeft, Briefcase, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Briefcase, CheckCircle2, Clock } from 'lucide-react';
 
 export default function MentorDetailPage({ params }) {
   const unwrappedParams = use(params);
@@ -76,11 +76,19 @@ export default function MentorDetailPage({ params }) {
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between">
             <div>
               <h1 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">{mentor.name}</h1>
-              <div className="mt-2 flex items-center text-[var(--color-muted-foreground)]">
-                <Briefcase className="mr-1.5 h-4 w-4" />
-                <span className="font-medium text-[var(--color-foreground)]">{mentor.company}</span>
-                <span className="mx-2">&bull;</span>
-                <span>{mentor.experience} 경력</span>
+              <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[var(--color-muted-foreground)]">
+                <span className="flex items-center">
+                  <Briefcase className="mr-1.5 h-4 w-4" />
+                  <span className="font-medium text-[var(--color-foreground)]">{mentor.company}</span>
+                  <span className="mx-1">&bull;</span>
+                  <span>{mentor.experience} 경력</span>
+                </span>
+                {mentor.pricePerHour != null && (
+                  <span className="inline-flex items-center rounded-md bg-[var(--color-accent)] px-2.5 py-1 text-sm font-medium text-[var(--color-accent-foreground)]">
+                    <Clock className="mr-1.5 h-3.5 w-3.5 text-[var(--color-primary)]" />
+                    1시간 {mentor.pricePerHour.toLocaleString('ko-KR')}원
+                  </span>
+                )}
               </div>
             </div>
             

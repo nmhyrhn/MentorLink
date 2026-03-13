@@ -1,13 +1,13 @@
 @import "tailwindcss";
 
 @theme {
-  /* 배경 전체 하얗게 */
+  /* 흰색 배경 + 노란 포인트 (흰색 배경에 어울리는 노란색) */
   --color-background: #ffffff;
   --color-foreground: #1a1a2e;
   --color-muted: #fafafa;
   --color-muted-foreground: #64748b;
   --color-border: #e5e7eb;
-  --color-primary: #facc15;
+  --color-primary: #eab308;
   --color-primary-foreground: #1f2933;
   --color-accent: #fefce8;
   --color-accent-foreground: #854d0e;

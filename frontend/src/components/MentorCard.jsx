@@ -1,6 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { ArrowRight, Briefcase } from 'lucide-react';
+import { ArrowRight, Briefcase, Clock } from 'lucide-react';
 
 export default function MentorCard({ mentor }) {
   const expertise = Array.isArray(mentor.expertise) ? mentor.expertise : [];
@@ -22,9 +22,17 @@ export default function MentorCard({ mentor }) {
               <h3 className="text-lg font-semibold text-[var(--color-foreground)]">
                 {mentor.name}
               </h3>
-              <div className="flex items-center text-sm text-[var(--color-muted-foreground)] mt-1">
-                <Briefcase className="mr-1.5 h-3.5 w-3.5" />
-                <span>{mentor.company || ''} &middot; {mentor.experience || ''}</span>
+              <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm text-[var(--color-muted-foreground)] mt-1">
+                <span className="flex items-center">
+                  <Briefcase className="mr-1.5 h-3.5 w-3.5" />
+                  {mentor.company || ''} &middot; {mentor.experience || ''}
+                </span>
+                {mentor.pricePerHour != null && (
+                  <span className="inline-flex items-center text-[var(--color-accent-foreground)] font-medium">
+                    <Clock className="mr-1 h-3 w-3 text-[var(--color-primary)]" />
+                    1시간 {mentor.pricePerHour.toLocaleString('ko-KR')}원
+                  </span>
+                )}
               </div>
             </div>
           </div>
