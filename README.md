@@ -57,7 +57,7 @@ npm run dev
 
 루트의 `.env` 파일에 Gmail SMTP 설정을 넣어두었습니다. `.env`는 `.gitignore`에 포함되어 GitHub에 올라가지 않습니다.
 
-예시 파일은 [`.env.example`](D:\1. 남혜린\2. 공부\코딩\MentorLink\.env.example)에서 확인할 수 있습니다.
+예시 파일은 [`.env.example`]에서 확인할 수 있습니다.
 
 필수 값:
 
