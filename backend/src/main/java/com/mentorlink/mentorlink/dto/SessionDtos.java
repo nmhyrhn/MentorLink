@@ -1,23 +1,24 @@
 package com.mentorlink.mentorlink.dto;
 
 import com.mentorlink.mentorlink.domain.SessionStatus;
-import jakarta.validation.constraints.NotNull;
 
 import java.time.LocalDateTime;
 
 public class SessionDtos {
 
-    public record CreateSessionRequest(
-            @NotNull Long applicationId,
-            @NotNull LocalDateTime scheduledAt
-    ) {
-    }
-
     public record SessionResponse(
             Long sessionId,
             Long applicationId,
+            Long mentorId,
+            String mentorName,
+            Long menteeUserId,
+            String menteeName,
+            String menteeContact,
             LocalDateTime scheduledAt,
-            SessionStatus status
+            LocalDateTime endAt,
+            Integer durationMinutes,
+            SessionStatus status,
+            boolean reviewSubmitted
     ) {
     }
 }

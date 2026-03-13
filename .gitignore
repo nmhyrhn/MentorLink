@@ -8,6 +8,7 @@ frontend/build/
 
 # Env
 .env
+.env.production
 .env*.local
 
 # Logs & misc

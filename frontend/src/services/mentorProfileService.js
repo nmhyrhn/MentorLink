@@ -1,49 +1,48 @@
 import api from './api';
 
-/**
- * 현재 로그인한 멘토의 프로필 조회
- */
+const mapAvailabilityRule = (rule) => ({
+  dayOfWeek: rule.dayOfWeek,
+  label: rule.label,
+  startTime: rule.startTime,
+  endTime: rule.endTime,
+});
+
+const mapProfile = (profile) => ({
+  id: profile.mentorId,
+  name: profile.mentorName,
+  field: profile.field,
+  company: profile.field,
+  experience: `${profile.careerYear}년`,
+  careerYear: profile.careerYear,
+  expertise: profile.expertise || [],
+  bio: profile.bio || '',
+  avatar: profile.imageUrl || '/default-mentor.svg',
+  availabilityRules: (profile.availabilityRules || []).map(mapAvailabilityRule),
+});
+
 export const getMyMentorProfile = async () => {
-  // return await api.get('/me/mentor-profile');
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      const stored = typeof window !== 'undefined' && localStorage.getItem('mentorLink_myProfile');
-      if (stored) {
-        try {
-          resolve(JSON.parse(stored));
-          return;
-        } catch (_) {}
-      }
-      resolve(null);
-    }, 200);
-  });
+  try {
+    const profile = await api.get('/mentors/me/profile');
+    return mapProfile(profile);
+  } catch (error) {
+    if (error.message.includes('찾을 수 없습니다')) {
+      return null;
+    }
+    throw error;
+  }
 };
 
-/**
- * 멘토 프로필 생성 또는 수정
- * @param {Object} data - { company, experience, expertise[], bio }
- */
-export const saveMentorProfile = async (data) => {
-  // return await api.post('/me/mentor-profile', data) or api.put('/me/mentor-profile', data);
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      if (!data.bio || !data.expertise?.length) {
-        reject(new Error('자기소개와 전문 분야를 입력해 주세요.'));
-        return;
-      }
-      const profile = {
-        id: 1,
-        name: '김앨리스',
-        company: data.company || '',
-        experience: data.experience || '',
-        expertise: Array.isArray(data.expertise) ? data.expertise : (data.expertise || '').split(',').map(s => s.trim()).filter(Boolean),
-        bio: data.bio,
-        avatar: 'https://api.dicebear.com/7.x/notionists/svg?seed=Alice',
-      };
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('mentorLink_myProfile', JSON.stringify(profile));
-      }
-      resolve(profile);
-    }, 400);
-  });
+export const saveMentorProfile = async (data, isUpdate = false) => {
+  const payload = {
+    bio: data.bio,
+    field: data.field,
+    careerYear: Number.parseInt(String(data.careerYear), 10) || 0,
+    expertise: data.expertise,
+    availabilityRules: data.availabilityRules,
+  };
+
+  const profile = isUpdate
+    ? await api.put('/mentors/me/profile', payload)
+    : await api.post('/mentors/profile', payload);
+  return mapProfile(profile);
 };

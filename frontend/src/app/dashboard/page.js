@@ -1,49 +1,101 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
-import { getApplicationsForMentor, updateApplicationStatus } from '@/services/applicationService';
-import { getMentors } from '@/services/mentorService';
-import { Check, X, User, Mail, Calendar, MessageSquare, UserCircle } from 'lucide-react';
-import Link from 'next/link';
+import { ko } from 'date-fns/locale';
+import { Calendar, Check, Mail, MessageSquare, User, X } from 'lucide-react';
+import {
+  completeSession,
+  getApplicationsForMentor,
+  getMySentApplications,
+  getSessions,
+  updateApplicationStatus,
+} from '@/services/applicationService';
+import { getCurrentUser } from '@/services/authService';
+import SessionCard from '@/components/SessionCard';
+
+const formatRange = (startAt, endAt) => {
+  if (!startAt) {
+    return '-';
+  }
+  const start = new Date(startAt);
+  if (!endAt) {
+    return format(start, 'yyyy.MM.dd a h:mm', { locale: ko });
+  }
+  return `${format(start, 'yyyy.MM.dd a h:mm', { locale: ko })} ~ ${format(new Date(endAt), 'a h:mm', { locale: ko })}`;
+};
+
+const statusLabel = {
+  pending: '대기 중',
+  approved: '승인됨',
+  rejected: '거절됨',
+  completed: '완료',
+  cancelled: '자동 취소',
+};
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const [user, setUser] = useState(null);
   const [applications, setApplications] = useState([]);
-  const [mentor, setMentor] = useState(null);
+  const [sentApplications, setSentApplications] = useState([]);
+  const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
-  
-  // Simulating logged in mentor (Alice Johnson, ID: 1)
-  const LOGGED_IN_MENTOR_ID = 1;
 
   useEffect(() => {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      router.replace('/login');
+      return;
+    }
+
+    setUser(currentUser);
+
     const fetchData = async () => {
       try {
-        const [mentorData, appsData] = await Promise.all([
-          getMentors().then(mentors => mentors.find(m => m.id === LOGGED_IN_MENTOR_ID)),
-          getApplicationsForMentor(LOGGED_IN_MENTOR_ID)
-        ]);
-        setMentor(mentorData);
-        setApplications(appsData);
+        const [sessionData, sentData] = await Promise.all([getSessions(), getMySentApplications()]);
+        setSessions(sessionData);
+        setSentApplications(sentData);
+
+        if (currentUser.role === 'MENTOR') {
+          const appsData = await getApplicationsForMentor();
+          setApplications(appsData);
+        }
       } catch (error) {
         console.error('Failed to load dashboard data:', error);
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
-  }, []);
+  }, [router]);
 
   const handleStatusUpdate = async (id, status) => {
     try {
-      const updatedApp = await updateApplicationStatus(id, status);
-      setApplications(prev => prev.map(app => (app.id === id ? updatedApp : app)));
+      await updateApplicationStatus(id, status);
+      if (status === 'approved') {
+        setApplications((prev) => prev.filter((app) => app.id !== id));
+        const sessionsData = await getSessions();
+        setSessions(sessionsData);
+      } else {
+        setApplications((prev) => prev.map((app) => (app.id === id ? { ...app, status: 'rejected' } : app)));
+      }
     } catch (error) {
-      console.error('Failed to update status:', error);
-      alert('상태 변경에 실패했습니다. 다시 시도해 주세요.');
+      alert(error.message || '상태 변경에 실패했습니다.');
     }
   };
 
-  if (loading) {
+  const handleCompleteSession = async (sessionId) => {
+    try {
+      const updated = await completeSession(sessionId);
+      setSessions((prev) => prev.map((session) => (session.id === sessionId ? updated : session)));
+    } catch (error) {
+      alert(error.message || '세션 완료 처리에 실패했습니다.');
+    }
+  };
+
+  if (loading || !user) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-[var(--color-muted)] border-t-[var(--color-primary)]"></div>
@@ -51,99 +103,164 @@ export default function DashboardPage() {
     );
   }
 
+  const upcomingSessions = sessions.filter((session) => session.status === 'scheduled');
+  const completedSessions = sessions.filter((session) => session.status === 'completed');
+
+  const SectionHeader = ({ title, count }) => (
+    <div className="mb-6 flex items-center justify-between">
+      <h2 className="text-xl font-semibold text-[var(--color-foreground)]">{title}</h2>
+      <span className="inline-flex items-center rounded-full bg-[var(--color-accent)] px-2.5 py-0.5 text-xs font-semibold text-[var(--color-accent-foreground)]">
+        {count}건
+      </span>
+    </div>
+  );
+
+  const EmptyState = ({ message }) => (
+    <div className="rounded-xl border border-dashed border-[var(--color-border)] p-12 text-center text-sm text-[var(--color-muted-foreground)]">
+      {message}
+    </div>
+  );
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">{mentor?.name?.split(' ')[0]}님, 다시 만나서 반가워요!</h1>
-        <p className="mt-2 text-[var(--color-muted-foreground)]">현재 들어온 멘토링 요청과 최근 활동 내역이에요.</p>
-        <Link
-          href="/dashboard/profile"
-          className="mt-4 inline-flex items-center gap-2 text-sm font-medium text-[var(--color-primary)] hover:underline"
-        >
-          <UserCircle className="h-4 w-4" />
-          멘토 프로필 등록/수정
-        </Link>
+        <h1 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
+          {user.role === 'MENTOR' ? '신청 멘토링 관리' : '신청 멘토링'}
+        </h1>
+        <p className="mt-2 text-[var(--color-muted-foreground)]">
+          {user.role === 'MENTOR'
+            ? `${user.name}님에게 들어온 신청과 예정된 세션을 한 화면에서 관리할 수 있습니다.`
+            : `${user.name}님의 멘토링 신청 현황과 예정된 세션을 확인할 수 있습니다.`}
+        </p>
       </div>
 
-      <div className="grid gap-6">
-        {applications.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[var(--color-border)] p-12 text-center">
-            <h3 className="text-lg font-medium text-[var(--color-foreground)]">아직 들어온 신청이 없어요</h3>
-            <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">멘티가 멘토링을 신청하면 이곳에 목록으로 표시됩니다.</p>
-          </div>
-        ) : (
-          <div className="space-y-6">
-            <h2 className="text-xl font-semibold text-[var(--color-foreground)] border-b border-[var(--color-border)] pb-2 flex items-center justify-between">
-              멘토링 신청 목록
-              <span className="inline-flex items-center rounded-full bg-[var(--color-accent)] px-2.5 py-0.5 text-xs font-semibold text-[var(--color-accent-foreground)]">
-                대기 중 {applications.filter(a => a.status === 'pending').length}건
-              </span>
-            </h2>
-            
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {applications.map((app) => (
-                <div key={app.id} className="flex flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] shadow-sm">
-                  <div className="border-b border-[var(--color-border)] bg-[var(--color-muted)]/50 px-5 py-4">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <User className="h-4 w-4 text-[var(--color-muted-foreground)]" />
-                        <span className="font-semibold text-[var(--color-foreground)]">{app.menteeName}</span>
+      <div className="space-y-12">
+        {user.role === 'MENTOR' && (
+          <section>
+            {(() => {
+              const pendingApplications = applications.filter((app) => app.status === 'pending');
+              return (
+                <>
+                  <SectionHeader title="들어온 신청" count={pendingApplications.length} />
+                  {pendingApplications.length === 0 ? (
+                    <EmptyState message="아직 대기 중인 신청이 없습니다." />
+                  ) : (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {pendingApplications.map((app) => (
+                  <div key={app.id} className="flex flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-white shadow-sm">
+                    <div className="border-b border-[var(--color-border)] bg-[var(--color-muted)]/50 px-5 py-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <User className="h-4 w-4 text-[var(--color-muted-foreground)]" />
+                          <span className="font-semibold text-[var(--color-foreground)]">{app.menteeName}</span>
+                        </div>
+                        <span className="rounded-full bg-[var(--color-accent)] px-2 py-1 text-xs font-medium text-[var(--color-accent-foreground)]">
+                          {statusLabel[app.status] || app.status}
+                        </span>
                       </div>
-                      <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                        app.status === 'pending' ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20 dark:bg-yellow-500/10 dark:text-yellow-500 dark:ring-yellow-500/20' :
-                        app.status === 'approved' ? 'bg-green-50 text-green-700 ring-green-600/20 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20' :
-                        'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-500/10 dark:text-red-400 dark:ring-red-500/20'
-                      }`}>
-                        {app.status === 'pending'
-                          ? '대기 중'
-                          : app.status === 'approved'
-                          ? '승인됨'
-                          : '거절됨'}
-                      </span>
                     </div>
-                    <div className="mt-1 flex items-center gap-2 text-xs text-[var(--color-muted-foreground)]">
-                      <Mail className="h-3.5 w-3.5" />
-                      {app.menteeEmail}
-                    </div>
-                  </div>
 
-                  <div className="flex-1 p-5">
-                    <div className="flex items-start gap-2 mb-2">
-                      <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-muted-foreground)]" />
-                      <p className="text-sm text-[var(--color-foreground)] line-clamp-4">{app.message}</p>
+                    <div className="flex-1 space-y-3 p-5 text-sm">
+                      <div className="flex items-start gap-2">
+                        <MessageSquare className="mt-0.5 h-4 w-4 shrink-0 text-[var(--color-muted-foreground)]" />
+                        <p className="text-[var(--color-foreground)]">{app.message}</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-[var(--color-muted-foreground)]">
+                        <Calendar className="h-4 w-4" />
+                        신청일 {format(new Date(app.date), 'yyyy.MM.dd a h:mm', { locale: ko })}
+                      </div>
+                      <div className="flex items-center gap-2 text-[var(--color-muted-foreground)]">
+                        <Calendar className="h-4 w-4" />
+                        희망 시간 {formatRange(app.preferredAt, app.preferredEndAt)}
+                      </div>
+                      <div className="flex items-center gap-2 text-[var(--color-muted-foreground)]">
+                        <Mail className="h-4 w-4" />
+                        {app.contact}
+                      </div>
+                      {app.rejectedReason && (
+                        <p className="rounded-md bg-red-50 px-3 py-2 text-xs text-red-600">{app.rejectedReason}</p>
+                      )}
                     </div>
-                    <div className="mt-4 flex items-center gap-1.5 text-xs text-[var(--color-muted-foreground)]">
-                      <Calendar className="h-3.5 w-3.5" />
-                      신청일 {format(new Date(app.date), 'yyyy년 M월 d일')}
-                    </div>
-                  </div>
 
-                  {app.status === 'pending' && (
-                    <div className="grid grid-cols-2 gap-px bg-[var(--color-border)]">
-                      <button
-                        onClick={() => handleStatusUpdate(app.id, 'rejected')}
-                        className="flex items-center justify-center gap-2 bg-[var(--color-background)] py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-700"
-                      >
-                        <X className="h-4 w-4" /> 거절
-                      </button>
-                      <button
-                        onClick={() => handleStatusUpdate(app.id, 'approved')}
-                        className="flex items-center justify-center gap-2 bg-[var(--color-background)] py-3 text-sm font-medium text-green-600 transition-colors hover:bg-green-50 dark:hover:bg-green-950 hover:text-green-700"
-                      >
-                        <Check className="h-4 w-4" /> 승인
-                      </button>
-                    </div>
+                    {app.status === 'pending' && (
+                      <div className="grid grid-cols-2 gap-px bg-[var(--color-border)]">
+                        <button
+                          onClick={() => handleStatusUpdate(app.id, 'rejected')}
+                          className="flex items-center justify-center gap-2 bg-[var(--color-background)] py-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50"
+                        >
+                          <X className="h-4 w-4" />
+                          거절
+                        </button>
+                        <button
+                          onClick={() => handleStatusUpdate(app.id, 'approved')}
+                          className="flex items-center justify-center gap-2 bg-[var(--color-background)] py-3 text-sm font-medium text-green-700 transition-colors hover:bg-green-50"
+                        >
+                          <Check className="h-4 w-4" />
+                          승인
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
                   )}
-                  {app.status === 'approved' && (
-                    <div className="bg-[var(--color-background)] py-3 text-center border-t border-[var(--color-border)] text-sm text-[var(--color-muted-foreground)]">
-                      세션이 자동으로 일정에 등록되었습니다.
-                    </div>
+                </>
+              );
+            })()}
+          </section>
+        )}
+
+        <section>
+          <SectionHeader title="예정된 세션" count={upcomingSessions.length} />
+          {upcomingSessions.length === 0 ? (
+            <EmptyState message="예정된 세션이 없습니다." />
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {upcomingSessions.map((session) => (
+                <SessionCard key={session.id} session={session} viewerRole={user.role} onComplete={handleCompleteSession} />
+              ))}
+            </div>
+          )}
+        </section>
+
+        <section>
+          <SectionHeader title={user.role === 'MENTOR' ? '내가 신청한 멘토링' : '신청한 멘토링'} count={sentApplications.length} />
+          {sentApplications.length === 0 ? (
+            <EmptyState message="아직 신청한 멘토링이 없습니다." />
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {sentApplications.map((app) => (
+                <div key={app.id} className="rounded-xl border border-[var(--color-border)] bg-white p-5 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <h3 className="font-semibold text-[var(--color-foreground)]">{app.mentorName}</h3>
+                    <span className="rounded-full bg-[var(--color-accent)] px-2 py-1 text-xs font-medium text-[var(--color-accent-foreground)]">
+                      {statusLabel[app.status] || app.status}
+                    </span>
+                  </div>
+                  <p className="mt-3 line-clamp-3 text-sm text-[var(--color-muted-foreground)]">{app.message}</p>
+                  <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">희망 시간: {formatRange(app.preferredAt, app.preferredEndAt)}</p>
+                  {app.sessionDate && (
+                    <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">확정 세션: {formatRange(app.sessionDate, app.sessionEndAt)}</p>
                   )}
+                  <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">연락처: {app.contact}</p>
                 </div>
               ))}
             </div>
-          </div>
-        )}
+          )}
+        </section>
+
+        <section>
+          <SectionHeader title="완료된 세션" count={completedSessions.length} />
+          {completedSessions.length === 0 ? (
+            <EmptyState message="완료된 세션이 없습니다." />
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {completedSessions.map((session) => (
+                <SessionCard key={session.id} session={session} viewerRole={user.role} onComplete={handleCompleteSession} />
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

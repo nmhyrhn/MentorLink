@@ -14,15 +14,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "멘토링 플랫폼 MentorLink",
-  description: "열정 있는 멘티와 현업 멘토를 연결하는 1:1 멘토링 플랫폼입니다.",
+  title: "MentorLink",
+  description: "멘토와 멘티를 연결하는 매칭형 멘토링 플랫폼입니다.",
 };
 
 export default function RootLayout({ children }) {
   return (
     <html lang="ko">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[var(--color-background)] min-h-screen flex flex-col`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen flex flex-col bg-[var(--color-background)]`}
       >
         <Navbar />
         <main className="flex-1">

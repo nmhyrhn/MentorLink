@@ -33,6 +33,13 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean verified = false;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private MentorProfile mentorProfile;
+
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;

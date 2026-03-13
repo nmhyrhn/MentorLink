@@ -3,15 +3,17 @@
 import { useState } from 'react';
 import { Star, Send } from 'lucide-react';
 
-export default function ReviewForm({ sessionId, onSubmit, isLoading = false }) {
+export default function ReviewForm({ onSubmit, isLoading = false }) {
   const [rating, setRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [comment, setComment] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (rating === 0) return; // Prevent submission without rating
-    onSubmit({ sessionId, rating, comment });
+    if (rating === 0) {
+      return;
+    }
+    onSubmit({ rating, comment });
   };
 
   return (
@@ -19,7 +21,7 @@ export default function ReviewForm({ sessionId, onSubmit, isLoading = false }) {
       <div className="mb-6">
         <h3 className="text-xl font-semibold leading-none tracking-tight text-[var(--color-foreground)]">멘토링 세션 후기 작성</h3>
         <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
-          이번 멘토링 세션은 어떠셨나요? 남겨주신 피드백은 멘토가 더 좋은 멘토링을 제공하는 데 큰 도움이 됩니다.
+          세션에서 받은 도움과 좋았던 점을 남기면 다른 사용자도 멘토를 선택하는 데 참고할 수 있습니다.
         </p>
       </div>
 
@@ -33,7 +35,7 @@ export default function ReviewForm({ sessionId, onSubmit, isLoading = false }) {
               <button
                 key={star}
                 type="button"
-                className="focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20 rounded-sm"
+                className="rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20"
                 onMouseEnter={() => setHoverRating(star)}
                 onMouseLeave={() => setHoverRating(0)}
                 onClick={() => setRating(star)}
@@ -55,15 +57,15 @@ export default function ReviewForm({ sessionId, onSubmit, isLoading = false }) {
 
         <div className="space-y-2">
           <label htmlFor="comment" className="text-sm font-medium leading-none text-[var(--color-foreground)]">
-            추가 코멘트 (선택)
+            추가 코멘트
           </label>
           <textarea
             id="comment"
             rows={4}
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="flex w-full rounded-md border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm ring-offset-[var(--color-background)] placeholder:text-[var(--color-muted-foreground)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20 focus-visible:border-[var(--color-primary)]"
-            placeholder="멘토링에서 좋았던 점, 아쉬웠던 점 등을 자유롭게 남겨주세요."
+            className="flex w-full rounded-md border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm placeholder:text-[var(--color-muted-foreground)] focus-visible:border-[var(--color-primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)]/20"
+            placeholder="멘토링에서 가장 도움이 되었던 점을 자유롭게 작성해 주세요."
           />
         </div>
 
@@ -76,7 +78,7 @@ export default function ReviewForm({ sessionId, onSubmit, isLoading = false }) {
             <span className="flex items-center gap-2">
               <svg className="h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
               </svg>
               제출 중...
             </span>

@@ -1,0 +1,26 @@
+services:
+  nginx:
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN}
+    volumes:
+      - ./infra/nginx/default.prod.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./infra/certs:/etc/nginx/certs:ro
+
+  mysql:
+    ports: []
+
+  backend:
+    environment:
+      APP_SWAGGER_ENABLED: "false"
+      APP_MOCK_DATA_ENABLED: "false"
+      APP_EMAIL_DEBUG_FALLBACK: "false"
+      APP_AUTH_REFRESH_TOKEN_SECURE: "true"
+      MAIL_DEBUG: "false"
+      MAIL_LOG_LEVEL: "INFO"
+
+  frontend:
+    environment:
+      NEXT_PUBLIC_API_URL: /api
