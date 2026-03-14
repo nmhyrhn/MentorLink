@@ -1,5 +1,4 @@
 import Navbar from "@/components/Navbar";
-import AgentationDev from "@/components/AgentationDev";
 import "./globals.css";
 
 export const metadata = {
@@ -17,7 +16,6 @@ export default function RootLayout({ children }) {
         <main className="flex-1">
           {children}
         </main>
-        {process.env.NODE_ENV === "development" && <AgentationDev />}
       </body>
     </html>
   );

@@ -1,34 +1,51 @@
 # MentorLink
 
-MentorLink는 멘티가 멘토에게 멘토링을 신청하고, 멘토가 승인하면 세션이 생성되며, 세션 종료 후 리뷰를 남기는 매칭형 서비스입니다. 채용 플랫폼의 `지원 -> 승인 -> 인터뷰 -> 평가` 흐름과 유사한 구조를 `신청 -> 승인 -> 세션 -> 리뷰`로 풀어낸 백엔드 포트폴리오 프로젝트입니다.
+MentorLink는 멘티가 멘토를 탐색하고 멘토링을 신청한 뒤, 멘토가 승인하면 세션이 생성되고 완료된 세션에만 후기를 남길 수 있는 매칭형 멘토링 플랫폼입니다.
+
+## 핵심 기능
+
+- 이메일 인증 기반 회원가입
+- JWT Access Token + Refresh Token 로그인
+- 비밀번호 재설정
+- 멘토 목록/상세 조회
+- 멘토링 신청, 승인, 거절
+- 예정 세션/완료 세션 관리
+- 완료 세션 전용 후기 작성
+- 멘티의 멘토 전향
+  - 진행 중 신청 또는 예정 세션이 있으면 전향 불가
+  - 전향 후에는 멘토 활동만 가능
 
 ## 기술 스택
 
-- Backend: Java 21, Spring Boot, Spring Data JPA, Spring Security, JWT, MySQL
-- Frontend: Next.js
-- Infra: Docker, Nginx, AWS EC2 배포 전개 가능 구조
-- Dev: Swagger(OpenAPI), GitHub
+- Frontend: Next.js 16, React 19, Axios
+- Backend: Java 21, Spring Boot, Spring Security, Spring Data JPA, JWT, JavaMail
+- Database: MySQL 8
+- Infra: Docker Compose, Nginx, AWS EC2
 
-## 실행 주소
+## 프로젝트 구조
 
-- Frontend: `http://localhost`
-- API: `http://localhost/api`
-- Swagger UI: `http://localhost/api/swagger-ui.html`
-- MySQL: `localhost:3306`
+```text
+frontend/   Next.js 앱
+backend/    Spring Boot API
+infra/      Nginx 설정 및 운영용 리소스
+```
 
-## Docker로 전체 실행
+## 로컬 실행
+
+### 1. Docker로 전체 실행
 
 루트 디렉터리에서 실행합니다.
 
 ```bash
-docker compose up --build
+docker compose up -d --build
 ```
 
-백그라운드 실행:
+접속 주소:
 
-```bash
-docker compose up --build -d
-```
+- Frontend: `http://localhost:3000`
+- Backend API: `http://localhost:8080/api`
+- Nginx Entry: `http://localhost`
+- MySQL: `localhost:3306`
 
 중지:
 
@@ -36,7 +53,13 @@ docker compose up --build -d
 docker compose down
 ```
 
-## 개별 실행
+DB까지 초기화:
+
+```bash
+docker compose down -v
+```
+
+### 2. 개별 실행
 
 백엔드:
 
@@ -53,96 +76,177 @@ npm install
 npm run dev
 ```
 
-## SMTP 설정
+## 환경 변수
 
-루트의 `.env` 파일에 Gmail SMTP 설정을 넣어두었습니다. `.env`는 `.gitignore`에 포함되어 GitHub에 올라가지 않습니다.
+실제 비밀값은 `.env`에 두고 Git에는 올리지 않습니다.
 
-예시 파일은 [`.env.example`]에서 확인할 수 있습니다.
+주요 항목:
 
-필수 값:
+- `APP_DOMAIN`
+- `APP_JWT_SECRET`
+- `APP_EMAIL_DEBUG_FALLBACK`
+- `APP_SWAGGER_ENABLED`
+- `APP_MOCK_DATA_ENABLED`
+- `APP_AUTH_REFRESH_TOKEN_SECURE`
+- `MYSQL_DATABASE`
+- `MYSQL_ROOT_PASSWORD`
+- `MYSQL_APP_USERNAME`
+- `MYSQL_APP_PASSWORD`
+- `MAIL_HOST`
+- `MAIL_PORT`
+- `MAIL_USERNAME`
+- `MAIL_PASSWORD`
+
+운영에서는 특히 아래를 권장합니다.
+
+- `APP_EMAIL_DEBUG_FALLBACK=false`
+- `APP_SWAGGER_ENABLED=false`
+- `APP_MOCK_DATA_ENABLED=false`
+- `APP_AUTH_REFRESH_TOKEN_SECURE=true`
+
+## 인증 구조
+
+- 로그인 성공 시 Access Token과 Refresh Token을 발급합니다.
+- Access Token은 API 인증에 사용합니다.
+- Refresh Token은 세션 연장에 사용합니다.
+- 비밀번호 재설정 시 기존 Refresh Token은 모두 무효화합니다.
+
+## 역할 정책
+
+- `MENTEE`: 멘토링 신청 가능
+- `MENTOR`: 멘토 활동만 가능
+- 멘토 계정은 멘토 상세 페이지를 통해 멘토링을 신청할 수 없습니다.
+- 멘티는 멘토 프로필 생성 시 멘토로 전향할 수 있습니다.
+- 단, `PENDING` 또는 `APPROVED` 신청이나 예정 세션이 남아 있으면 전향할 수 없습니다.
+
+## 후기 정책
+
+- 후기 작성은 완료된 세션에서만 가능합니다.
+- 완료되지 않은 세션은 후기 작성이 불가능합니다.
+- 완료된 세션이 10개를 넘으면 페이지네이션으로 조회합니다.
+
+## 테스트/검증 상태
+
+다음 항목을 기준으로 확인했습니다.
+
+- `backend`: `./gradlew test`
+- `frontend`: `npm run lint`
+- `frontend`: `npm run build`
+
+## 운영 배포 구조
+
+컨테이너 구성:
+
+- `nginx`
+- `frontend`
+- `backend`
+- `mysql`
+
+로컬 기본 compose는 개발/검증용이고, 운영은 `docker-compose.prod.yml` 오버라이드를 함께 사용합니다.
+
+운영 목표:
+
+- 외부 진입은 `nginx`만 공개
+- `frontend`, `backend`, `mysql`은 내부 통신
+- HTTPS 종료 지점은 `nginx`
+
+운영 실행 예시:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+```
+
+## 운영 배포 체크리스트
+
+### 배포 전 확인
+
+- `main`이 배포 브랜치인지 확인
+- 작업 트리가 clean 상태인지 확인
+- 운영용 `.env` 준비
+- 운영용 도메인 준비
+- HTTPS 사용 시 인증서 준비
+
+### 운영 환경값 체크
+
+- `APP_DOMAIN`이 실제 도메인인지 확인
+- `APP_JWT_SECRET`이 충분히 긴 랜덤 값인지 확인
+- `APP_EMAIL_DEBUG_FALLBACK=false`
+- `APP_SWAGGER_ENABLED=false`
+- `APP_MOCK_DATA_ENABLED=false`
+- `APP_AUTH_REFRESH_TOKEN_SECURE=true`
+
+### Compose 체크
+
+```bash
+docker compose config
+docker compose -f docker-compose.yml -f docker-compose.prod.yml config
+```
+
+운영에서는 `80`, `443`만 외부 공개되도록 확인합니다.
+
+### 스모크 테스트
+
+공개 페이지:
+
+- `/`
+- `/mentors`
+- `/login`
+- `/signup`
+- `/forgot-password`
+
+인증:
+
+- 이메일 인증 코드 발송
+- 회원가입
+- 로그인
+- 로그아웃
+- 비밀번호 재설정
+
+멘티 흐름:
+
+- 멘토 상세 진입
+- 신청 버튼 노출
+- 신청 생성
+- 신청 목록 반영
+- 세션 완료 후 후기 작성
+
+멘토 흐름:
+
+- 멘토 프로필 생성/수정
+- 받은 신청 확인
+- 승인/거절
+- 세션 완료 처리
+- 멘토 상세에서 신청 버튼 비노출
+- `/mentors/:id/apply` 직접 접근 차단
+
+전환 정책:
+
+- 진행 중 신청/예정 세션이 있으면 멘토 전향 차단
+- 정리 후 전향 가능
+
+### 로그 확인
+
+```bash
+docker compose logs --tail 100 backend
+docker compose logs --tail 100 frontend
+docker compose logs --tail 100 nginx
+docker compose logs --tail 100 mysql
+```
+
+## SMTP
+
+Gmail SMTP 기준 예시:
 
 - `MAIL_HOST=smtp.gmail.com`
 - `MAIL_PORT=587`
-- `MAIL_USERNAME=사용할 Gmail 주소`
-- `MAIL_PASSWORD=Google 앱 비밀번호`
+- `MAIL_USERNAME=<gmail>`
+- `MAIL_PASSWORD=<google app password>`
 
-현재 코드 기준으로 이메일 인증 API는 준비되어 있지만, 구글 SMTP에서 `Username and Password not accepted`가 반환되어 실제 메일 발송은 아직 막혀 있습니다. 새 앱 비밀번호를 다시 발급하거나 Gmail 보안 설정을 확인한 뒤 재검증하면 됩니다.
+## 배포 메모
 
-## 로그인용 목업 계정
+- EC2 소형 인스턴스에서는 서버에서 직접 이미지를 빌드하면 메모리/디스크 이슈가 발생할 수 있습니다.
+- 이 경우 로컬에서 `linux/amd64` 이미지를 빌드해 서버에 업로드한 뒤 `--no-build`로 기동하는 방식이 더 안정적입니다.
 
-공통 비밀번호:
+## 라이선스
 
-- `password1234`
-
-멘티 계정:
-
-- `mentee.demo@mentorlink.dev` / 오하린
-- `mentee.second@mentorlink.dev` / 김서진
-- `mentee.third@mentorlink.dev` / 박도윤
-
-멘토 계정:
-
-- `backend.junior@mentorlink.dev` / 김민서 / 백엔드 개발 / 2년
-- `backend.senior@mentorlink.dev` / 이도현 / 백엔드 아키텍처 / 11년
-- `frontend.react@mentorlink.dev` / 박지윤 / 프론트엔드 개발 / 5년
-- `devops.aws@mentorlink.dev` / 최현우 / DevOps / AWS / 8년
-- `product.design@mentorlink.dev` / 정수빈 / 프로덕트 디자인 / 6년
-- `ux.design@mentorlink.dev` / 서예린 / UX 리서치 / 4년
-- `data.engineer@mentorlink.dev` / 윤다정 / 데이터 엔지니어링 / 7년
-- `android.mobile@mentorlink.dev` / 강서준 / 안드로이드 개발 / 5년
-- `ios.mobile@mentorlink.dev` / 한소율 / iOS 개발 / 9년
-- `qa.automation@mentorlink.dev` / 임태경 / QA 자동화 / 10년
-
-참고:
-
-- 현재 DB 볼륨이 유지되고 있어서 예전에 생성된 테스트 계정 몇 개가 함께 남아 있습니다.
-- 완전히 새 데이터로 시작하려면 `docker compose down -v` 후 다시 실행해야 합니다. 이 명령은 기존 DB 데이터를 삭제합니다.
-
-## 운영 흐름 목업 데이터
-
-시드 데이터는 실제 운영 화면을 확인할 수 있도록 상태별로 나뉘어 있습니다.
-
-- `PENDING` 신청 3건
-- `APPROVED` 신청 3건
-- `COMPLETED` 신청 2건
-- `REJECTED` 신청 1건
-- `SCHEDULED` 세션 3건
-- `FINISHED` 세션 2건
-- 완료된 세션에 대한 리뷰 2건
-
-예시 흐름:
-
-1. 멘티가 멘토를 조회한다.
-2. 멘토링을 신청하면 `applications`에 `PENDING` 상태로 저장된다.
-3. 멘토가 승인하면 `Application` 상태가 `APPROVED`로 바뀌고 `sessions`에 세션이 생성된다.
-4. 세션 완료 시 `sessions` 상태가 `FINISHED`가 된다.
-5. 리뷰 작성 시 `reviews`에 평점과 코멘트가 저장된다.
-
-## 데이터베이스 구조
-
-MySQL 데이터베이스 이름은 `mentorlink`입니다.
-
-주요 테이블:
-
-- `users`
-- `mentor_profiles`
-- `applications`
-- `sessions`
-- `reviews`
-- `email_verifications`
-
-핵심 관계:
-
-- 멘토 1 : N 신청
-- 멘티 1 : N 신청
-- 신청 1 : 1 세션
-- 세션 1 : 1 리뷰
-
-## 확인된 상태
-
-- `backend`: `./gradlew compileJava` 성공
-- `frontend`: `npm run build` 성공
-- `docker compose up --build -d` 성공
-- `http://localhost` 응답 확인
-- `http://localhost/api/mentors` 응답 확인
-- `http://localhost/api/swagger-ui.html` 응답 확인
+포트폴리오 용도로 제작된 프로젝트입니다.
