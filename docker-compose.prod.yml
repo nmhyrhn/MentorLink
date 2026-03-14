@@ -13,6 +13,7 @@ services:
     ports: []
 
   backend:
+    ports: []
     environment:
       APP_SWAGGER_ENABLED: "false"
       APP_MOCK_DATA_ENABLED: "false"
@@ -22,5 +23,10 @@ services:
       MAIL_LOG_LEVEL: "INFO"
 
   frontend:
+    build:
+      args:
+        BACKEND_INTERNAL_URL: http://backend:8080
+    ports: []
     environment:
       NEXT_PUBLIC_API_URL: /api
+      BACKEND_INTERNAL_URL: http://backend:8080

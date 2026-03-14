@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { getMentorById } from '@/services/mentorService';
-import { getCurrentUser } from '@/services/authService';
+import { getCurrentUser, hasMentorRole } from '@/services/authService';
 import { ArrowLeft, Briefcase, CheckCircle2, Clock, Star } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -46,6 +46,7 @@ export default function MentorDetailPage({ params }) {
   }
 
   const isSelfMentor = currentUser && currentUser.userId === mentor.userId;
+  const canApply = !isSelfMentor && !hasMentorRole(currentUser);
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
@@ -65,7 +66,7 @@ export default function MentorDetailPage({ params }) {
               <Image src={mentor.avatar} alt={mentor.name} fill className="object-cover" sizes="(max-width: 768px) 128px, 160px" />
             </div>
 
-            {!isSelfMentor && (
+            {canApply && (
               <Link
                 href={`/mentors/${mentor.id}/apply`}
                 className="mb-2 hidden items-center justify-center rounded-md bg-[var(--color-primary)] px-6 py-2.5 text-sm font-medium text-[var(--color-primary-foreground)] shadow-sm transition-colors hover:opacity-90 sm:inline-flex"
@@ -92,13 +93,18 @@ export default function MentorDetailPage({ params }) {
               </div>
             </div>
 
-            {!isSelfMentor && (
+            {canApply && (
               <Link
                 href={`/mentors/${mentor.id}/apply`}
                 className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-[var(--color-primary)] px-6 py-2.5 text-sm font-medium text-[var(--color-primary-foreground)] shadow-sm transition-colors hover:opacity-90 sm:hidden"
               >
                 멘토링 신청하기
               </Link>
+            )}
+            {!canApply && !isSelfMentor && currentUser && (
+              <p className="mt-6 text-sm font-medium text-[var(--color-primary)]">
+                멘토 계정은 멘토 페이지를 통해 멘토링을 신청할 수 없습니다.
+              </p>
             )}
           </div>
 

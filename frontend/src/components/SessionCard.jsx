@@ -3,12 +3,13 @@ import { ko } from 'date-fns/locale';
 import { Calendar, User, Clock, CheckCircle2 } from 'lucide-react';
 import Link from 'next/link';
 
-export default function SessionCard({ session, viewerRole, onComplete }) {
+export default function SessionCard({ session, currentUserId, onComplete }) {
   const startDate = new Date(session.sessionDate);
   const endDate = new Date(session.sessionEndAt);
   const isCompleted = session.status === 'completed';
-  const counterpartName = viewerRole === 'MENTOR' ? session.menteeName : session.mentorName;
-  const counterpartLabel = viewerRole === 'MENTOR' ? '멘티' : '멘토';
+  const isMentorParticipant = currentUserId === session.mentorUserId;
+  const counterpartName = isMentorParticipant ? session.menteeName : session.mentorName;
+  const counterpartLabel = isMentorParticipant ? '멘티' : '멘토';
 
   return (
     <div className="flex flex-col overflow-hidden rounded-xl border border-[var(--color-border)] bg-[var(--color-background)] transition-shadow hover:shadow-sm">
@@ -43,7 +44,7 @@ export default function SessionCard({ session, viewerRole, onComplete }) {
           <div>
             <p className="font-medium text-[var(--color-foreground)]">{counterpartName}</p>
             <p className="text-sm text-[var(--color-muted-foreground)]">{counterpartLabel}</p>
-            {viewerRole === 'MENTOR' && session.menteeContact && (
+            {isMentorParticipant && session.menteeContact && (
               <p className="mt-1 text-sm text-[var(--color-muted-foreground)]">연락처: {session.menteeContact}</p>
             )}
             <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">상담 시간 {session.durationMinutes}분</p>
@@ -60,7 +61,7 @@ export default function SessionCard({ session, viewerRole, onComplete }) {
           >
             세션 완료 처리
           </button>
-        ) : session.reviewSubmitted || viewerRole === 'MENTOR' ? (
+        ) : session.reviewSubmitted || isMentorParticipant ? (
           <div className="text-center text-sm text-[var(--color-muted-foreground)]">
             {session.reviewSubmitted ? '후기 작성 완료' : '멘티 후기 작성 대기 중'}
           </div>

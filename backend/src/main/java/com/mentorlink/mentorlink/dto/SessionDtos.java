@@ -10,6 +10,7 @@ public class SessionDtos {
             Long sessionId,
             Long applicationId,
             Long mentorId,
+            Long mentorUserId,
             String mentorName,
             Long menteeUserId,
             String menteeName,

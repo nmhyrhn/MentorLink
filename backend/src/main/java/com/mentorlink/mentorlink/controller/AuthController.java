@@ -37,6 +37,16 @@ public class AuthController {
         return userService.verifyEmailCode(request);
     }
 
+    @PostMapping("/password/reset/request")
+    public UserDtos.MessageResponse requestPasswordReset(@RequestBody @Valid UserDtos.PasswordResetRequest request) {
+        return userService.sendPasswordResetCode(request);
+    }
+
+    @PostMapping("/password/reset/confirm")
+    public UserDtos.MessageResponse confirmPasswordReset(@RequestBody @Valid UserDtos.PasswordResetConfirmRequest request) {
+        return userService.resetPassword(request);
+    }
+
     @PostMapping("/signup")
     @ResponseStatus(HttpStatus.CREATED)
     public UserDtos.AuthResponse signUp(

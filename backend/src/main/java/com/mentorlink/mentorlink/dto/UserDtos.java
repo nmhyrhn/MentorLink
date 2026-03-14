@@ -32,6 +32,18 @@ public class UserDtos {
     ) {
     }
 
+    public record PasswordResetRequest(
+            @Email @Pattern(regexp = STRICT_EMAIL_REGEX, message = "이메일은 example@domain.com 형식이어야 합니다.") @NotBlank String email
+    ) {
+    }
+
+    public record PasswordResetConfirmRequest(
+            @Email @Pattern(regexp = STRICT_EMAIL_REGEX, message = "이메일은 example@domain.com 형식이어야 합니다.") @NotBlank String email,
+            @NotBlank String code,
+            @NotBlank @Size(min = 8) String newPassword
+    ) {
+    }
+
     public record LoginRequest(
             @Email @Pattern(regexp = STRICT_EMAIL_REGEX, message = "이메일은 example@domain.com 형식이어야 합니다.") @NotBlank String email,
             @NotBlank String password

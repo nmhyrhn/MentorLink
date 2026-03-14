@@ -33,6 +33,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
+    ports:
+      - "8080:8080"
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/${MYSQL_DATABASE}?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Seoul
       SPRING_DATASOURCE_USERNAME: ${MYSQL_APP_USERNAME}
@@ -64,9 +66,14 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        BACKEND_INTERNAL_URL: http://backend:8080
     restart: unless-stopped
+    ports:
+      - "3000:3000"
     environment:
-      NEXT_PUBLIC_API_URL: /api
+      NEXT_PUBLIC_API_URL: http://localhost:8080/api
+      BACKEND_INTERNAL_URL: http://backend:8080
     depends_on:
       - backend
 

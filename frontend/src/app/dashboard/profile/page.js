@@ -1,10 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, Save, Plus, X } from 'lucide-react';
 import { getMyMentorProfile, saveMentorProfile } from '@/services/mentorProfileService';
+import { getCurrentUser, hasMentorRole, updateCurrentUser } from '@/services/authService';
 
 const WEEK_DAYS = [
   { dayOfWeek: 'MONDAY', label: '월' },
@@ -33,12 +35,15 @@ const emptyRuleMap = () =>
   }, {});
 
 export default function MentorProfilePage() {
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [promotedToMentor, setPromotedToMentor] = useState(false);
   const [newSkill, setNewSkill] = useState('');
   const [existingProfile, setExistingProfile] = useState(false);
+  const [currentUser, setCurrentUser] = useState(null);
   const [formData, setFormData] = useState({
     field: '',
     careerYear: '',
@@ -50,6 +55,14 @@ export default function MentorProfilePage() {
 
   useEffect(() => {
     const load = async () => {
+      const user = getCurrentUser();
+      if (!user) {
+        router.replace('/login');
+        return;
+      }
+
+      setCurrentUser(user);
+
       try {
         const profile = await getMyMentorProfile();
         if (profile) {
@@ -80,7 +93,7 @@ export default function MentorProfilePage() {
     };
 
     load();
-  }, []);
+  }, [router]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -117,6 +130,7 @@ export default function MentorProfilePage() {
     e.preventDefault();
     setError('');
     setSuccess(false);
+    setPromotedToMentor(false);
 
     const enabledRules = WEEK_DAYS
       .map((item) => ({ dayOfWeek: item.dayOfWeek, ...formData.availabilityRules[item.dayOfWeek] }))
@@ -134,6 +148,7 @@ export default function MentorProfilePage() {
 
     setSaving(true);
     try {
+      const isCreatingProfile = !existingProfile;
       await saveMentorProfile(
         {
           field: formData.field,
@@ -144,6 +159,12 @@ export default function MentorProfilePage() {
         },
         existingProfile
       );
+      if (currentUser && !hasMentorRole(currentUser)) {
+        const nextRole = 'MENTOR';
+        const nextUser = updateCurrentUser({ role: nextRole });
+        setCurrentUser(nextUser || { ...currentUser, role: nextRole });
+      }
+      setPromotedToMentor(isCreatingProfile);
       setSuccess(true);
       setExistingProfile(true);
     } catch (err) {
@@ -180,12 +201,22 @@ export default function MentorProfilePage() {
             <p className="text-sm text-[var(--color-muted-foreground)]">
               기본 이미지는 공통 이미지로 적용되며, 소개와 전문 분야, 예약 가능 요일을 직접 관리할 수 있습니다.
             </p>
+            {currentUser && !hasMentorRole(currentUser) && (
+              <p className="mt-2 text-sm text-[var(--color-primary)]">
+                프로필을 저장하면 멘토 계정으로 전환되며, 이후에는 멘토링 신청 대신 멘토 활동을 하게 됩니다.
+                예정된 세션이나 진행 중인 신청이 남아 있으면 전환할 수 없습니다.
+              </p>
+            )}
           </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && <div className="rounded-md bg-red-50 px-4 py-3 text-sm text-red-600">{error}</div>}
-          {success && <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">프로필이 저장되었습니다.</div>}
+          {success && (
+            <div className="rounded-md bg-green-50 px-4 py-3 text-sm text-green-700">
+              {promotedToMentor ? '멘토 프로필이 생성되어 멘토 계정으로 전환되었습니다.' : '프로필이 저장되었습니다.'}
+            </div>
+          )}
 
           <div className="space-y-2">
             <label htmlFor="field" className="text-sm font-medium text-[var(--color-foreground)]">대표 전문 분야</label>

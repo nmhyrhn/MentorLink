@@ -40,6 +40,10 @@ public class MentorService {
             ApplicationStatus.APPROVED,
             ApplicationStatus.COMPLETED
     );
+    private static final List<ApplicationStatus> ROLE_SWITCH_BLOCKING_STATUSES = List.of(
+            ApplicationStatus.PENDING,
+            ApplicationStatus.APPROVED
+    );
 
     private final MentorProfileRepository mentorProfileRepository;
     private final ReviewRepository reviewRepository;
@@ -50,8 +54,13 @@ public class MentorService {
     public MentorDtos.MentorResponse upsertMentorProfile(Long currentUserId, MentorDtos.UpsertMentorProfileRequest request) {
         User user = userService.findById(currentUserId);
 
-        if (user.getRole() != Role.MENTOR) {
-            throw new BadRequestException("멘토 권한 사용자만 프로필을 관리할 수 있습니다.");
+        if (user.getRole() == Role.MENTEE) {
+            assertNoActiveMenteeWorkflows(currentUserId);
+            user.setRole(Role.MENTOR);
+        }
+
+        if (!user.getRole().canMentor()) {
+            throw new BadRequestException("멘토 권한을 확인할 수 없습니다.");
         }
 
         MentorProfile profile = mentorProfileRepository.findByUserUserId(currentUserId)
@@ -70,6 +79,12 @@ public class MentorService {
         profile.setAvailabilityRulesCsv(joinAvailabilityRules(request.availabilityRules()));
 
         return toResponse(mentorProfileRepository.save(profile));
+    }
+
+    private void assertNoActiveMenteeWorkflows(Long currentUserId) {
+        if (applicationRepository.existsByMenteeUserIdAndStatusIn(currentUserId, ROLE_SWITCH_BLOCKING_STATUSES)) {
+            throw new BadRequestException("예정 세션 또는 진행 중인 멘토링 신청이 있으면 멘토로 전향할 수 없습니다.");
+        }
     }
 
     @Transactional(readOnly = true)

@@ -33,6 +33,7 @@ const mapSession = (session) => ({
   id: session.sessionId,
   applicationId: session.applicationId,
   mentorId: session.mentorId,
+  mentorUserId: session.mentorUserId,
   mentorName: session.mentorName,
   menteeId: session.menteeUserId,
   menteeName: session.menteeName,

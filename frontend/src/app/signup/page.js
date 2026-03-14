@@ -61,7 +61,10 @@ export default function SignUpPage() {
         name: formData.name.trim(),
         email: formData.email.trim(),
       });
-      setInfo(response.message);
+      const nextInfo = response.debugCode
+        ? `${response.message} 로컬 테스트용 인증 코드: ${response.debugCode}`
+        : response.message;
+      setInfo(nextInfo);
     } catch (err) {
       setError(err.message || '인증번호 발송에 오류가 발생했습니다. 잠시 후 다시 시도해 주세요.');
     } finally {

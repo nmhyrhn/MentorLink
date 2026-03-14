@@ -7,7 +7,7 @@ import { ArrowLeft, CheckCircle2 } from 'lucide-react';
 import ApplicationForm from '@/components/ApplicationForm';
 import { getMentorById, getAvailableSlots } from '@/services/mentorService';
 import { applyForMentoring } from '@/services/applicationService';
-import { getCurrentUser } from '@/services/authService';
+import { getCurrentUser, hasMentorRole } from '@/services/authService';
 
 export default function ApplicationPage({ params }) {
   const unwrappedParams = use(params);
@@ -79,6 +79,7 @@ export default function ApplicationPage({ params }) {
   }
 
   const isSelfMentor = user && mentor.userId === user.userId;
+  const isMentorUser = hasMentorRole(user);
 
   if (isSelfMentor) {
     return (
@@ -100,6 +101,33 @@ export default function ApplicationPage({ params }) {
               className="inline-flex items-center justify-center rounded-md bg-[var(--color-primary)] px-6 py-2.5 text-sm font-medium text-[var(--color-primary-foreground)]"
             >
               신청 멘토링 보기
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isMentorUser) {
+    return (
+      <div className="mx-auto max-w-2xl px-4 py-16 sm:px-6 lg:px-8">
+        <div className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-background)] p-8 text-center shadow-sm">
+          <h2 className="text-2xl font-bold tracking-tight text-[var(--color-foreground)]">멘토 계정은 멘토링을 신청할 수 없습니다</h2>
+          <p className="mt-3 text-sm text-[var(--color-muted-foreground)]">
+            단일 역할 정책에 따라 멘토 계정에서는 멘토 페이지를 통한 신청 기능이 제공되지 않습니다.
+          </p>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href={`/mentors/${mentor.id}`}
+              className="inline-flex items-center justify-center rounded-md border border-[var(--color-border)] bg-white px-6 py-2.5 text-sm font-medium text-[var(--color-foreground)]"
+            >
+              멘토 프로필로 돌아가기
+            </Link>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center rounded-md bg-[var(--color-primary)] px-6 py-2.5 text-sm font-medium text-[var(--color-primary-foreground)]"
+            >
+              멘토링 관리 보기
             </Link>
           </div>
         </div>

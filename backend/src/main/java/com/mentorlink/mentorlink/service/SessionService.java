@@ -32,7 +32,7 @@ public class SessionService {
 
     @Transactional(readOnly = true)
     public List<SessionDtos.SessionResponse> getMySessions(User currentUser) {
-        List<MentoringSession> mentorSessions = currentUser.getRole() == Role.MENTOR
+        List<MentoringSession> mentorSessions = currentUser.getRole().canMentor()
                 ? sessionRepository.findByApplicationMentorUserUserIdOrderByScheduledAtDesc(currentUser.getUserId())
                 : List.of();
         List<MentoringSession> menteeSessions = sessionRepository.findByApplicationMenteeUserIdOrderByScheduledAtDesc(currentUser.getUserId());
@@ -78,6 +78,7 @@ public class SessionService {
                 session.getSessionId(),
                 app.getApplicationId(),
                 app.getMentor().getMentorId(),
+                app.getMentor().getUser().getUserId(),
                 app.getMentor().getUser().getName(),
                 app.getMentee().getUserId(),
                 app.getMentee().getName(),

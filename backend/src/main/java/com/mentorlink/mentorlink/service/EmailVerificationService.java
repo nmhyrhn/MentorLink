@@ -58,6 +58,25 @@ public class EmailVerificationService {
 
     @Transactional
     public String sendVerificationCode(String email, String name) {
+        return sendCode(email, name, "[MentorLink] 이메일 인증 코드", """
+                안녕하세요, %s님.
+
+                MentorLink 회원가입 인증 코드는 %s 입니다.
+                인증 코드는 %d분 동안 유효합니다.
+                """);
+    }
+
+    @Transactional
+    public String sendPasswordResetCode(String email, String name) {
+        return sendCode(email, name, "[MentorLink] 비밀번호 재설정 코드", """
+                안녕하세요, %s님.
+
+                MentorLink 비밀번호 재설정 코드는 %s 입니다.
+                인증 코드는 %d분 동안 유효합니다.
+                """);
+    }
+
+    private String sendCode(String email, String name, String subject, String template) {
         String code = String.format("%06d", new Random().nextInt(1_000_000));
         emailVerificationRepository.save(
                 EmailVerification.builder()
@@ -84,13 +103,8 @@ public class EmailVerificationService {
             SimpleMailMessage message = new SimpleMailMessage();
             message.setTo(email);
             message.setFrom(mailUsername);
-            message.setSubject("[MentorLink] 이메일 인증 코드");
-            message.setText("""
-                    안녕하세요, %s님.
-
-                    MentorLink 회원가입 인증 코드는 %s 입니다.
-                    인증 코드는 %d분 동안 유효합니다.
-                    """.formatted(name, code, expirationMinutes));
+            message.setSubject(subject);
+            message.setText(template.formatted(name, code, expirationMinutes));
             mailSender.send(message);
             log.info("Verification email sent successfully to {} via {}:{}", email, mailHost, mailPort);
             return null;

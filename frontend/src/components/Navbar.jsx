@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { LayoutDashboard, Compass, Menu, X, LogOut, Users, Settings } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { cn } from '@/lib/utils';
-import { logout } from '@/services/authService';
+import { hasMentorRole, logout } from '@/services/authService';
 import useAuthUser from '@/hooks/useAuthUser';
 
 export default function Navbar() {
@@ -18,8 +18,12 @@ export default function Navbar() {
       { name: '멘토 찾기', href: '/mentors', icon: Compass },
       { name: '신청 멘토링', href: '/dashboard', icon: LayoutDashboard },
     ];
-    if (user?.role === 'MENTOR') {
-      links.push({ name: '프로필 관리', href: '/dashboard/profile', icon: Settings });
+    if (user) {
+      links.push({
+        name: hasMentorRole(user) ? '프로필 관리' : '멘토로 전향하기',
+        href: '/dashboard/profile',
+        icon: Settings,
+      });
     }
     return links;
   }, [user]);

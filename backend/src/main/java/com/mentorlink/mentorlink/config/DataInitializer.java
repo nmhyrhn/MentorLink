@@ -18,6 +18,7 @@ import com.mentorlink.mentorlink.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +35,7 @@ import java.util.List;
 public class DataInitializer implements CommandLineRunner {
 
     private static final String DEFAULT_IMAGE_URL = "/default-mentor.svg";
+    private static final String DEMO_MENTEE_EMAIL = "mentee.demo@mentorlink.dev";
 
     private final UserRepository userRepository;
     private final MentorProfileRepository mentorProfileRepository;
@@ -44,10 +46,17 @@ public class DataInitializer implements CommandLineRunner {
     private final RefreshTokenRepository refreshTokenRepository;
     private final PasswordEncoder passwordEncoder;
 
+    @Value("${app.mock-data.reset-on-startup:false}")
+    private boolean resetOnStartup;
+
     @Override
     @Transactional
     public void run(String... args) {
-        resetToMockData();
+        if (resetOnStartup) {
+            resetToMockData();
+        } else if (userRepository.findByEmail(DEMO_MENTEE_EMAIL).isPresent()) {
+            return;
+        }
 
         User demoMentee = createUser("오하린", "mentee.demo@mentorlink.dev", Role.MENTEE);
         User secondMentee = createUser("김서진", "mentee.second@mentorlink.dev", Role.MENTEE);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -12,7 +13,7 @@ import {
   getSessions,
   updateApplicationStatus,
 } from '@/services/applicationService';
-import { getCurrentUser } from '@/services/authService';
+import { getCurrentUser, hasMentorRole } from '@/services/authService';
 import SessionCard from '@/components/SessionCard';
 
 const formatRange = (startAt, endAt) => {
@@ -34,12 +35,15 @@ const statusLabel = {
   cancelled: '자동 취소',
 };
 
+const COMPLETED_SESSIONS_PER_PAGE = 10;
+
 export default function DashboardPage() {
   const router = useRouter();
   const [user, setUser] = useState(null);
   const [applications, setApplications] = useState([]);
   const [sentApplications, setSentApplications] = useState([]);
   const [sessions, setSessions] = useState([]);
+  const [completedPage, setCompletedPage] = useState(1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -53,11 +57,14 @@ export default function DashboardPage() {
 
     const fetchData = async () => {
       try {
-        const [sessionData, sentData] = await Promise.all([getSessions(), getMySentApplications()]);
+        const [sessionData, sentData] = await Promise.all([
+          getSessions(),
+          hasMentorRole(currentUser) ? Promise.resolve([]) : getMySentApplications(),
+        ]);
         setSessions(sessionData);
         setSentApplications(sentData);
 
-        if (currentUser.role === 'MENTOR') {
+        if (hasMentorRole(currentUser)) {
           const appsData = await getApplicationsForMentor();
           setApplications(appsData);
         }
@@ -95,6 +102,19 @@ export default function DashboardPage() {
     }
   };
 
+  const upcomingSessions = sessions.filter((session) => session.status === 'scheduled');
+  const completedSessions = sessions.filter((session) => session.status === 'completed');
+  const visibleSentApplications = sentApplications.filter((application) => application.status !== 'completed');
+  const completedPageCount = Math.max(1, Math.ceil(completedSessions.length / COMPLETED_SESSIONS_PER_PAGE));
+  const paginatedCompletedSessions = completedSessions.slice(
+    (completedPage - 1) * COMPLETED_SESSIONS_PER_PAGE,
+    completedPage * COMPLETED_SESSIONS_PER_PAGE
+  );
+
+  useEffect(() => {
+    setCompletedPage((prev) => Math.min(prev, completedPageCount));
+  }, [completedPageCount]);
+
   if (loading || !user) {
     return (
       <div className="flex h-[60vh] items-center justify-center">
@@ -103,8 +123,7 @@ export default function DashboardPage() {
     );
   }
 
-  const upcomingSessions = sessions.filter((session) => session.status === 'scheduled');
-  const completedSessions = sessions.filter((session) => session.status === 'completed');
+  const mentorMode = hasMentorRole(user);
 
   const SectionHeader = ({ title, count }) => (
     <div className="mb-6 flex items-center justify-between">
@@ -125,17 +144,36 @@ export default function DashboardPage() {
     <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold tracking-tight text-[var(--color-foreground)]">
-          {user.role === 'MENTOR' ? '신청 멘토링 관리' : '신청 멘토링'}
+          {mentorMode ? '신청 멘토링 관리' : '신청 멘토링'}
         </h1>
         <p className="mt-2 text-[var(--color-muted-foreground)]">
-          {user.role === 'MENTOR'
-            ? `${user.name}님에게 들어온 신청과 예정된 세션을 한 화면에서 관리할 수 있습니다.`
+          {mentorMode
+            ? `${user.name}님에게 들어온 신청과 예정된 세션을 한 화면에서 관리할 수 있습니다. 멘토 계정에서는 멘토링 신청 기능이 노출되지 않습니다.`
             : `${user.name}님의 멘토링 신청 현황과 예정된 세션을 확인할 수 있습니다.`}
         </p>
       </div>
 
       <div className="space-y-12">
-        {user.role === 'MENTOR' && (
+        {!mentorMode && (
+          <section className="rounded-2xl border border-[var(--color-border)] bg-[var(--color-muted)]/50 p-6">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-xl font-semibold text-[var(--color-foreground)]">멘토로 전향하기</h2>
+                <p className="mt-2 text-sm text-[var(--color-muted-foreground)]">
+                  멘티 계정 그대로 멘토 프로필을 만들면 바로 멘토링을 받을 수 있습니다.
+                </p>
+              </div>
+              <Link
+                href="/dashboard/profile"
+                className="inline-flex items-center justify-center rounded-md bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-[var(--color-primary-foreground)] transition-colors hover:brightness-95"
+              >
+                멘토 프로필 만들기
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {mentorMode && (
           <section>
             {(() => {
               const pendingApplications = applications.filter((app) => app.status === 'pending');
@@ -217,47 +255,86 @@ export default function DashboardPage() {
           ) : (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {upcomingSessions.map((session) => (
-                <SessionCard key={session.id} session={session} viewerRole={user.role} onComplete={handleCompleteSession} />
+                <SessionCard key={session.id} session={session} currentUserId={user.userId} onComplete={handleCompleteSession} />
               ))}
             </div>
           )}
         </section>
 
-        <section>
-          <SectionHeader title={user.role === 'MENTOR' ? '내가 신청한 멘토링' : '신청한 멘토링'} count={sentApplications.length} />
-          {sentApplications.length === 0 ? (
-            <EmptyState message="아직 신청한 멘토링이 없습니다." />
-          ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {sentApplications.map((app) => (
-                <div key={app.id} className="rounded-xl border border-[var(--color-border)] bg-white p-5 shadow-sm">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-[var(--color-foreground)]">{app.mentorName}</h3>
-                    <span className="rounded-full bg-[var(--color-accent)] px-2 py-1 text-xs font-medium text-[var(--color-accent-foreground)]">
-                      {statusLabel[app.status] || app.status}
-                    </span>
+        {!mentorMode && (
+          <section>
+            <SectionHeader title="신청한 멘토링" count={visibleSentApplications.length} />
+            {visibleSentApplications.length === 0 ? (
+              <EmptyState message="아직 신청한 멘토링이 없습니다." />
+            ) : (
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {visibleSentApplications.map((app) => (
+                  <div key={app.id} className="rounded-xl border border-[var(--color-border)] bg-white p-5 shadow-sm">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-[var(--color-foreground)]">{app.mentorName}</h3>
+                      <span className="rounded-full bg-[var(--color-accent)] px-2 py-1 text-xs font-medium text-[var(--color-accent-foreground)]">
+                        {statusLabel[app.status] || app.status}
+                      </span>
+                    </div>
+                    <p className="mt-3 line-clamp-3 text-sm text-[var(--color-muted-foreground)]">{app.message}</p>
+                    <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">희망 시간: {formatRange(app.preferredAt, app.preferredEndAt)}</p>
+                    {app.sessionDate && (
+                      <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">확정 세션: {formatRange(app.sessionDate, app.sessionEndAt)}</p>
+                    )}
+                    <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">연락처: {app.contact}</p>
                   </div>
-                  <p className="mt-3 line-clamp-3 text-sm text-[var(--color-muted-foreground)]">{app.message}</p>
-                  <p className="mt-3 text-xs text-[var(--color-muted-foreground)]">희망 시간: {formatRange(app.preferredAt, app.preferredEndAt)}</p>
-                  {app.sessionDate && (
-                    <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">확정 세션: {formatRange(app.sessionDate, app.sessionEndAt)}</p>
-                  )}
-                  <p className="mt-1 text-xs text-[var(--color-muted-foreground)]">연락처: {app.contact}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
 
         <section>
           <SectionHeader title="완료된 세션" count={completedSessions.length} />
           {completedSessions.length === 0 ? (
             <EmptyState message="완료된 세션이 없습니다." />
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {completedSessions.map((session) => (
-                <SessionCard key={session.id} session={session} viewerRole={user.role} onComplete={handleCompleteSession} />
-              ))}
+            <div className="space-y-6">
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {paginatedCompletedSessions.map((session) => (
+                  <SessionCard key={session.id} session={session} currentUserId={user.userId} onComplete={handleCompleteSession} />
+                ))}
+              </div>
+
+              {completedPageCount > 1 && (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setCompletedPage((prev) => Math.max(prev - 1, 1))}
+                    disabled={completedPage === 1}
+                    className="rounded-md border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-foreground)] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    이전
+                  </button>
+                  {Array.from({ length: completedPageCount }, (_, index) => index + 1).map((pageNumber) => (
+                    <button
+                      key={pageNumber}
+                      type="button"
+                      onClick={() => setCompletedPage(pageNumber)}
+                      className={`rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                        completedPage === pageNumber
+                          ? 'bg-[var(--color-primary)] text-[var(--color-primary-foreground)]'
+                          : 'border border-[var(--color-border)] text-[var(--color-foreground)]'
+                      }`}
+                    >
+                      {pageNumber}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setCompletedPage((prev) => Math.min(prev + 1, completedPageCount))}
+                    disabled={completedPage === completedPageCount}
+                    className="rounded-md border border-[var(--color-border)] px-3 py-2 text-sm text-[var(--color-foreground)] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    다음
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </section>

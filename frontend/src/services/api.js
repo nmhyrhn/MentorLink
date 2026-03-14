@@ -2,6 +2,9 @@ import axios from 'axios';
 
 const TOKEN_KEY = 'mentorlink_access_token';
 const USER_KEY = 'mentorlink_user';
+const API_BASE_URL = typeof window === 'undefined'
+  ? process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080/api'
+  : '/api';
 
 export const getAccessToken = () => {
   if (typeof window === 'undefined') {
@@ -25,7 +28,7 @@ export const clearClientAuthState = () => {
 };
 
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || '/api',
+  baseURL: API_BASE_URL,
   timeout: 10000,
   withCredentials: true,
   headers: {
@@ -46,7 +49,7 @@ api.interceptors.request.use((config) => {
 const refreshAccessToken = async () => {
   if (!refreshPromise) {
     refreshPromise = axios.post(
-      `${process.env.NEXT_PUBLIC_API_URL || '/api'}/auth/refresh`,
+      `${API_BASE_URL}/auth/refresh`,
       {},
       {
         withCredentials: true,
@@ -100,7 +103,8 @@ api.interceptors.response.use(
       }
     }
 
-    const message = error?.response?.data?.message || error.message || 'API request failed.';
+    const serverMessage = error?.response?.data?.message;
+    const message = serverMessage || (status ? '서버 오류가 발생했습니다.' : '서버 오류가 발생했습니다.');
     return Promise.reject(new Error(message));
   }
 );

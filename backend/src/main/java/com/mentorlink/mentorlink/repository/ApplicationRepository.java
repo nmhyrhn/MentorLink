@@ -17,6 +17,7 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
     /** 희망 시간이 지나서 자동 취소 대상인 PENDING 신청 조회 */
     List<Application> findByStatusAndPreferredAtBefore(ApplicationStatus status, LocalDateTime before);
     boolean existsByMentorMentorIdAndMenteeUserIdAndStatus(Long mentorId, Long menteeUserId, ApplicationStatus status);
+    boolean existsByMenteeUserIdAndStatusIn(Long menteeUserId, Collection<ApplicationStatus> statuses);
     Optional<Application> findByApplicationIdAndMentorUserUserId(Long applicationId, Long mentorUserId);
     List<Application> findByMentorMentorIdAndStatusIn(Long mentorId, Collection<ApplicationStatus> statuses);
 }

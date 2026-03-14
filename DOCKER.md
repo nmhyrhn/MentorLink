@@ -5,7 +5,7 @@
 | 구분 | 위치 | 로컬 연결 | 비고 |
 |------|------|-----------|------|
 | **프론트엔드** | `frontend/` | `http://localhost:3000` | Next.js 16, API 호출은 `NEXT_PUBLIC_API_URL` 또는 기본 `http://localhost:8080/api` |
-| **백엔드** | 없음 (예정) | `http://localhost:8080` | Spring Boot 예정, 현재는 프론트 목 데이터 사용 |
+| **백엔드** | `backend/` | `http://localhost:8080` | Spring Boot, API는 `/api` prefix 사용 |
 | **DB** | Docker MySQL | `localhost:3306` | docker-compose로 실행, DB명 `mentorlink` |
 
 ### 로컬 연결 관계
@@ -46,8 +46,6 @@ docker compose down
 
 ---
 
-## 백엔드 추가 시
+## 백엔드 포함 구조
 
-1. `backend/`에 Spring Boot 프로젝트 추가.
-2. `docker-compose.yml`에서 `backend` 서비스 주석 해제 후 `frontend`의 `NEXT_PUBLIC_API_URL`를 `http://backend:8080/api`로 변경.
-3. `docker compose up -d` 재실행.
+- `docker-compose.yml`에 `backend` 서비스가 포함되어 있으며, Nginx가 `/api` 요청을 백엔드로 전달합니다.

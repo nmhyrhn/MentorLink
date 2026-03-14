@@ -28,12 +28,22 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(cors -> {})
                 .csrf(AbstractHttpConfigurer::disable)
                 .formLogin(AbstractHttpConfigurer::disable)
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(authorize -> {
-                    authorize.requestMatchers("/auth/signup", "/auth/login", "/auth/refresh", "/auth/logout", "/auth/email/send-code", "/auth/email/verify").permitAll();
+                    authorize.requestMatchers(
+                            "/auth/signup",
+                            "/auth/login",
+                            "/auth/refresh",
+                            "/auth/logout",
+                            "/auth/email/send-code",
+                            "/auth/email/verify",
+                            "/auth/password/reset/request",
+                            "/auth/password/reset/confirm"
+                    ).permitAll();
                     if (swaggerEnabled) {
                         authorize.requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll();
                     }

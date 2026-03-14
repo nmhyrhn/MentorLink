@@ -27,14 +27,36 @@ public class UserService {
         validateEmailAvailable(request.email());
         authRateLimitService.assertEmailSendAllowed(request.email());
 
-        emailVerificationService.sendVerificationCode(request.email(), request.name());
-        return new UserDtos.MessageResponse("인증 코드를 이메일로 발송했습니다.", null);
+        String debugCode = emailVerificationService.sendVerificationCode(request.email(), request.name());
+        return new UserDtos.MessageResponse("인증 코드를 이메일로 발송했습니다.", debugCode);
     }
 
     @Transactional
     public UserDtos.MessageResponse verifyEmailCode(UserDtos.VerifyEmailCodeRequest request) {
         emailVerificationService.verifyCode(request.email(), request.code());
         return new UserDtos.MessageResponse("이메일 인증이 완료되었습니다.", null);
+    }
+
+    @Transactional
+    public UserDtos.MessageResponse sendPasswordResetCode(UserDtos.PasswordResetRequest request) {
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+        authRateLimitService.assertEmailSendAllowed(request.email());
+
+        String debugCode = emailVerificationService.sendPasswordResetCode(user.getEmail(), user.getName());
+        return new UserDtos.MessageResponse("비밀번호 재설정 코드를 이메일로 발송했습니다.", debugCode);
+    }
+
+    @Transactional
+    public UserDtos.MessageResponse resetPassword(UserDtos.PasswordResetConfirmRequest request) {
+        User user = userRepository.findByEmail(request.email())
+                .orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+        emailVerificationService.verifyCode(request.email(), request.code());
+
+        user.setPassword(passwordEncoder.encode(request.newPassword()));
+        refreshTokenService.revokeAllForUser(user.getUserId());
+        authRateLimitService.resetLoginFailures(request.email());
+        return new UserDtos.MessageResponse("비밀번호가 재설정되었습니다. 새 비밀번호로 다시 로그인해 주세요.", null);
     }
 
     @Transactional

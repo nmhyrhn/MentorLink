@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
@@ -43,44 +43,30 @@ export default function ApplicationForm({ mentorId, onSubmit, isLoading = false,
     [groupedSlots, selectedDate]
   );
 
-  const selectedSlotData = useMemo(
-    () => timeOptions.find((slot) => slot.startAt === selectedTime) || null,
-    [selectedTime, timeOptions]
+  const fallbackDate = dateOptions[0] || '';
+  const effectiveSelectedDate =
+    selectedDate && groupedSlots[selectedDate] ? selectedDate : fallbackDate;
+
+  const effectiveTimeOptions = useMemo(
+    () => (effectiveSelectedDate ? groupedSlots[effectiveSelectedDate] || [] : []),
+    [effectiveSelectedDate, groupedSlots]
   );
 
-  useEffect(() => {
-    if (!dateOptions.length) {
-      setSelectedDate('');
-      setSelectedTime('');
-      return;
-    }
+  const fallbackTime = effectiveTimeOptions[0]?.startAt || '';
+  const effectiveSelectedTime =
+    selectedTime && effectiveTimeOptions.some((slot) => slot.startAt === selectedTime)
+      ? selectedTime
+      : fallbackTime;
 
-    if (!selectedDate || !groupedSlots[selectedDate]) {
-      setSelectedDate(dateOptions[0]);
-      setSelectedTime(groupedSlots[dateOptions[0]][0]?.startAt || '');
-    }
-  }, [dateOptions, groupedSlots, selectedDate]);
+  const selectedSlotData = useMemo(
+    () => effectiveTimeOptions.find((slot) => slot.startAt === effectiveSelectedTime) || null,
+    [effectiveSelectedTime, effectiveTimeOptions]
+  );
 
-  useEffect(() => {
-    if (!timeOptions.length) {
-      setSelectedTime('');
-      return;
-    }
-
-    if (!selectedTime || !timeOptions.some((slot) => slot.startAt === selectedTime)) {
-      setSelectedTime(timeOptions[0].startAt);
-    }
-  }, [timeOptions, selectedTime]);
-
-  useEffect(() => {
-    if (!selectedSlotData) {
-      return;
-    }
-
-    if (!selectedSlotData.durationOptions.includes(durationMinutes)) {
-      setDurationMinutes(selectedSlotData.durationOptions[0]);
-    }
-  }, [durationMinutes, selectedSlotData]);
+  const effectiveDurationMinutes =
+    selectedSlotData && selectedSlotData.durationOptions.includes(durationMinutes)
+      ? durationMinutes
+      : selectedSlotData?.durationOptions[0] || 0;
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -94,14 +80,14 @@ export default function ApplicationForm({ mentorId, onSubmit, isLoading = false,
       contact,
       preferredAt: selectedSlotData.startAt,
       preferredEndAt: toLocalDateTimeString(
-        new Date(new Date(selectedSlotData.startAt).getTime() + durationMinutes * 60 * 1000)
+        new Date(new Date(selectedSlotData.startAt).getTime() + effectiveDurationMinutes * 60 * 1000)
       ),
-      durationMinutes,
+      durationMinutes: effectiveDurationMinutes,
     });
   };
 
   const endPreview = selectedSlotData
-    ? new Date(new Date(selectedSlotData.startAt).getTime() + durationMinutes * 60 * 1000)
+    ? new Date(new Date(selectedSlotData.startAt).getTime() + effectiveDurationMinutes * 60 * 1000)
     : null;
 
   return (
@@ -118,8 +104,13 @@ export default function ApplicationForm({ mentorId, onSubmit, isLoading = false,
           <label className="text-sm font-medium text-[var(--color-foreground)]">예약 일정</label>
           <div className="grid gap-3 md:grid-cols-3">
             <select
-              value={selectedDate}
-              onChange={(e) => setSelectedDate(e.target.value)}
+              value={effectiveSelectedDate}
+              onChange={(e) => {
+                const nextDate = e.target.value;
+                setSelectedDate(nextDate);
+                const nextTime = groupedSlots[nextDate]?.[0]?.startAt || '';
+                setSelectedTime(nextTime);
+              }}
               disabled={!dateOptions.length}
               className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-50"
             >
@@ -135,15 +126,15 @@ export default function ApplicationForm({ mentorId, onSubmit, isLoading = false,
             </select>
 
             <select
-              value={selectedTime}
+              value={effectiveSelectedTime}
               onChange={(e) => setSelectedTime(e.target.value)}
-              disabled={!timeOptions.length}
+              disabled={!effectiveTimeOptions.length}
               className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-50"
             >
-              {!timeOptions.length ? (
+              {!effectiveTimeOptions.length ? (
                 <option value="">예약 가능한 시간이 없습니다</option>
               ) : (
-                timeOptions.map((slot) => (
+                effectiveTimeOptions.map((slot) => (
                   <option key={slot.startAt} value={slot.startAt}>
                     {format(new Date(slot.startAt), 'a h:mm', { locale: ko })}
                   </option>
@@ -152,7 +143,7 @@ export default function ApplicationForm({ mentorId, onSubmit, isLoading = false,
             </select>
 
             <select
-              value={durationMinutes}
+              value={effectiveDurationMinutes}
               onChange={(e) => setDurationMinutes(Number(e.target.value))}
               disabled={!selectedSlotData}
               className="flex h-10 w-full rounded-md border border-[var(--color-border)] bg-transparent px-3 py-2 text-sm focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-primary)]/20 disabled:opacity-50"

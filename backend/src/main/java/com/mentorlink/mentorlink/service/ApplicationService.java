@@ -4,6 +4,7 @@ import com.mentorlink.mentorlink.domain.Application;
 import com.mentorlink.mentorlink.domain.ApplicationStatus;
 import com.mentorlink.mentorlink.domain.MentorProfile;
 import com.mentorlink.mentorlink.domain.MentoringSession;
+import com.mentorlink.mentorlink.domain.Role;
 import com.mentorlink.mentorlink.domain.SessionStatus;
 import com.mentorlink.mentorlink.domain.User;
 import com.mentorlink.mentorlink.dto.ApplicationDtos;
@@ -31,6 +32,10 @@ public class ApplicationService {
     public ApplicationDtos.ApplicationResponse createApplication(Long currentUserId, ApplicationDtos.CreateApplicationRequest request) {
         MentorProfile mentor = mentorService.findById(request.mentorId());
         User mentee = userService.findById(currentUserId);
+
+        if (mentee.getRole() != Role.MENTEE) {
+            throw new BadRequestException("멘티 계정만 멘토링을 신청할 수 있습니다.");
+        }
 
         if (mentor.getUser().getUserId().equals(currentUserId)) {
             throw new BadRequestException("본인에게는 멘토링을 신청할 수 없습니다.");
