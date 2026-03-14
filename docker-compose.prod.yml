@@ -1,19 +1,19 @@
 services:
   nginx:
-    ports:
+    ports: !reset
       - "80:80"
       - "443:443"
     environment:
       APP_DOMAIN: ${APP_DOMAIN}
-    volumes:
+    volumes: !reset
       - ./infra/nginx/default.prod.conf.template:/etc/nginx/templates/default.conf.template:ro
       - ./infra/certs:/etc/nginx/certs:ro
 
   mysql:
-    ports: []
+    ports: !reset []
 
   backend:
-    ports: []
+    ports: !reset []
     environment:
       APP_SWAGGER_ENABLED: "false"
       APP_MOCK_DATA_ENABLED: "false"
@@ -26,7 +26,7 @@ services:
     build:
       args:
         BACKEND_INTERNAL_URL: http://backend:8080
-    ports: []
+    ports: !reset []
     environment:
       NEXT_PUBLIC_API_URL: /api
       BACKEND_INTERNAL_URL: http://backend:8080
