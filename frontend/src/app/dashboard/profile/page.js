@@ -202,9 +202,10 @@ export default function MentorProfilePage() {
               기본 이미지는 공통 이미지로 적용되며, 소개와 전문 분야, 예약 가능 요일을 직접 관리할 수 있습니다.
             </p>
             {currentUser && !hasMentorRole(currentUser) && (
-              <p className="mt-2 text-sm text-[var(--color-primary)]">
-                프로필을 저장하면 멘토 계정으로 전환되며, 이후에는 멘토링 신청 대신 멘토 활동을 하게 됩니다.
-                예정된 세션이나 진행 중인 신청이 남아 있으면 전환할 수 없습니다.
+              <p className="mt-2 text-sm font-medium text-red-600">
+                프로필을 저장하면 멘토 계정으로 전환됩니다. 전향 후에는 멘티로 다시 되돌리기 어렵고,
+                멘토링 신청 대신 멘토 활동만 할 수 있습니다. 예정된 세션이나 진행 중인 신청이 남아 있으면
+                전환할 수 없습니다.
               </p>
             )}
           </div>

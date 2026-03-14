@@ -103,7 +103,7 @@ export default function MentorDetailPage({ params }) {
             )}
             {!canApply && !isSelfMentor && currentUser && (
               <p className="mt-6 text-sm font-medium text-[var(--color-primary)]">
-                멘토 계정은 멘토 페이지를 통해 멘토링을 신청할 수 없습니다.
+                멘토 계정은 멘토 페이지를 통해 멘토링을 신청할 수 없습니다. 멘토링 신청은 멘티 계정에서만 가능합니다.
               </p>
             )}
           </div>
