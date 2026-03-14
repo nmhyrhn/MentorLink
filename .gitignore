@@ -15,6 +15,7 @@ frontend/build/
 # Logs & misc
 *.log
 .DS_Store
+INTERVIEW_PREP.md
 
 # IDE
 .idea/
