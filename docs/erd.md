@@ -22,7 +22,7 @@ erDiagram
 
     MENTOR_PROFILES {
         bigint mentor_id PK
-        bigint user_id FK UK
+        bigint user_id FK
         varchar field
         int career_year
         text expertise
@@ -47,7 +47,7 @@ erDiagram
 
     SESSIONS {
         bigint session_id PK
-        bigint application_id FK UK
+        bigint application_id FK
         datetime scheduled_at
         datetime end_at
         int duration_minutes
@@ -57,7 +57,7 @@ erDiagram
 
     REVIEWS {
         bigint review_id PK
-        bigint session_id FK UK
+        bigint session_id FK
         int rating
         text comment
         datetime created_at
@@ -66,7 +66,7 @@ erDiagram
     REFRESH_TOKENS {
         bigint refresh_token_id PK
         bigint user_id FK
-        varchar token_hash UK
+        varchar token_hash
         boolean revoked
         datetime expires_at
         datetime created_at
